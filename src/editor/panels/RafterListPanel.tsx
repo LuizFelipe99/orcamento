@@ -1,12 +1,14 @@
 import { useMemo } from 'react';
-import { formatMeters } from '../../formatting/measurementFormatters';
+import { formatMeters, formatPercent } from '../../formatting/measurementFormatters';
 import { parseNonNegativeNumber } from '../../formatting/measurementParsers';
 import { roundUpRafterLength, summarizeRafters, type RafterSummary } from '../../geometry/rafterLayout';
 import { planCuts } from '../../materials/cuttingPlan';
+import { addPieceMargin } from '../../materials/safetyMargin';
 import { useRoofProjectStore } from '../../store/roofProjectStore';
 import { useResolvedRoofPlanes, useRoofRafters } from '../hooks/useRoofMaterials';
 import { CuttingPlanSummary } from './CuttingPlanSummary';
 import { DecimalField } from './DecimalField';
+import { SafetyMarginNotice } from './SafetyMarginNotice';
 import { StockLengthsEditor } from './StockLengthsEditor';
 
 const MILLIMETERS_PER_METER = 1000;
@@ -31,6 +33,25 @@ const updateSawKerf = (sawKerfInMillimeters: number | null) => {
 
 type ExactLengthListProps = {
   rafterSummary: RafterSummary;
+};
+
+type ExactListMarginProps = {
+  rafterCount: number;
+  safetyMarginPercent: number | null;
+};
+
+const ExactListMargin = ({ rafterCount, safetyMarginPercent }: ExactListMarginProps) => {
+  if (safetyMarginPercent === null || safetyMarginPercent <= 0) {
+    return <SafetyMarginNotice safetyMarginPercent={safetyMarginPercent} />;
+  }
+
+  const extraPieceCount = addPieceMargin(rafterCount, safetyMarginPercent) - rafterCount;
+
+  return (
+    <p className="planes-panel__hint">
+      Margem de {formatPercent(safetyMarginPercent)}: pedir mais {extraPieceCount} caibros, dos tamanhos maiores.
+    </p>
+  );
 };
 
 const ExactLengthList = ({ rafterSummary }: ExactLengthListProps) => (
@@ -100,7 +121,10 @@ export const RafterListPanel = () => {
             parseValue={parseNonNegativeNumber}
             onValueChange={updateSawKerf}
           />
-          <CuttingPlanSummary cuttingPlan={cuttingPlan} />
+          <CuttingPlanSummary
+            cuttingPlan={cuttingPlan}
+            safetyMarginPercent={lumberOrderSettings.woodSafetyMarginPercent}
+          />
           <details className="planes-panel__details">
             <summary>Medidas exatas de cada caibro</summary>
             <ExactLengthList rafterSummary={rafterSummary} />
@@ -112,6 +136,10 @@ export const RafterListPanel = () => {
             Informe o que a madeireira tem disponível para montar o pedido com plano de corte.
           </p>
           <ExactLengthList rafterSummary={rafterSummary} />
+          <ExactListMargin
+            rafterCount={rafterSummary.rafterCount}
+            safetyMarginPercent={lumberOrderSettings.woodSafetyMarginPercent}
+          />
         </>
       )}
       {planesWithoutRafters > 0 && (

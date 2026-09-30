@@ -28,11 +28,13 @@ const EMPTY_TILE_SPECIFICATION: TileSpecification = {
 export type LumberOrderSettings = {
   rafterStockLengthsInMeters: number[];
   sawKerfInMillimeters: number;
+  woodSafetyMarginPercent: number | null;
 };
 
 const DEFAULT_LUMBER_ORDER_SETTINGS: LumberOrderSettings = {
   rafterStockLengthsInMeters: [],
   sawKerfInMillimeters: 4,
+  woodSafetyMarginPercent: null,
 };
 
 type RoofProjectState = {
@@ -54,6 +56,7 @@ type RoofProjectState = {
   addRafterStockLength: (stockLengthInMeters: number) => void;
   removeRafterStockLength: (stockLengthInMeters: number) => void;
   updateSawKerf: (sawKerfInMillimeters: number) => void;
+  updateWoodSafetyMargin: (woodSafetyMarginPercent: number | null) => void;
 };
 
 export const useRoofProjectStore = create<RoofProjectState>()((set) => ({
@@ -135,6 +138,8 @@ export const useRoofProjectStore = create<RoofProjectState>()((set) => ({
     })),
   updateSawKerf: (sawKerfInMillimeters) =>
     set((state) => ({ lumberOrderSettings: { ...state.lumberOrderSettings, sawKerfInMillimeters } })),
+  updateWoodSafetyMargin: (woodSafetyMarginPercent) =>
+    set((state) => ({ lumberOrderSettings: { ...state.lumberOrderSettings, woodSafetyMarginPercent } })),
 }));
 
 export const readResolvedRoofPlanes = (): RoofPlane[] => {

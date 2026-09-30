@@ -1,6 +1,7 @@
 import {
   parseLengthInMeters,
   parseNonNegativeLengthInMeters,
+  parseNonNegativeNumber,
   parseSlopePercent,
 } from '../../formatting/measurementParsers';
 import { useRoofProjectStore, type ProjectSettings } from '../../store/roofProjectStore';
@@ -21,8 +22,12 @@ const updateRoofSlope = updateProjectSetting('roofSlopePercent');
 const updateEaveOverhang = updateProjectSetting('eaveOverhangInMeters');
 const updateRafterSpacing = updateProjectSetting('rafterSpacingInMeters');
 
+const updateWoodSafetyMargin = (woodSafetyMarginPercent: number | null) =>
+  useRoofProjectStore.getState().updateWoodSafetyMargin(woodSafetyMarginPercent);
+
 export const ProjectSettingsPanel = () => {
   const projectSettings = useRoofProjectStore((state) => state.projectSettings);
+  const woodSafetyMarginPercent = useRoofProjectStore((state) => state.lumberOrderSettings.woodSafetyMarginPercent);
 
   return (
     <section className="planes-panel__section">
@@ -54,6 +59,16 @@ export const ProjectSettingsPanel = () => {
         parseValue={parseLengthInMeters}
         onValueChange={updateRafterSpacing}
       />
+      <DecimalField
+        inputId="wood-safety-margin-input"
+        label="Margem de segurança da madeira (%)"
+        value={woodSafetyMarginPercent}
+        placeholder="ex.: 10"
+        acceptsEmptyValue
+        parseValue={parseNonNegativeNumber}
+        onValueChange={updateWoodSafetyMargin}
+      />
+      <p className="planes-panel__hint">Vale para caibros e ripas: cobre peças com defeito, quebra e acidentes.</p>
       <LayerVisibilityToggles />
     </section>
   );
