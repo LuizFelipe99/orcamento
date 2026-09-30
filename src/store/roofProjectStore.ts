@@ -25,6 +25,16 @@ const EMPTY_TILE_SPECIFICATION: TileSpecification = {
   wastePercent: null,
 };
 
+export type LumberOrderSettings = {
+  rafterStockLengthsInMeters: number[];
+  sawKerfInMillimeters: number;
+};
+
+const DEFAULT_LUMBER_ORDER_SETTINGS: LumberOrderSettings = {
+  rafterStockLengthsInMeters: [],
+  sawKerfInMillimeters: 4,
+};
+
 type RoofProjectState = {
   baseOutline: PlanPoint[] | null;
   roofPlaneDefinitions: RoofPlaneDefinition[];
@@ -32,6 +42,7 @@ type RoofProjectState = {
   selectedRoofPlaneId: string | null;
   projectSettings: ProjectSettings;
   tileSpecification: TileSpecification;
+  lumberOrderSettings: LumberOrderSettings;
   defineBaseOutline: (baseOutline: PlanPoint[], initialDefinitions: RoofPlaneDefinition[]) => void;
   clearProject: () => void;
   replaceRoofPlaneDefinitions: (nextDefinitions: RoofPlaneDefinition[]) => void;
@@ -40,6 +51,9 @@ type RoofProjectState = {
   updateRoofPlane: (roofPlaneId: string, changes: RoofPlaneChanges) => void;
   updateProjectSettings: (changes: Partial<ProjectSettings>) => void;
   updateTileSpecification: (changes: Partial<TileSpecification>) => void;
+  addRafterStockLength: (stockLengthInMeters: number) => void;
+  removeRafterStockLength: (stockLengthInMeters: number) => void;
+  updateSawKerf: (sawKerfInMillimeters: number) => void;
 };
 
 export const useRoofProjectStore = create<RoofProjectState>()((set) => ({
@@ -49,6 +63,7 @@ export const useRoofProjectStore = create<RoofProjectState>()((set) => ({
   selectedRoofPlaneId: null,
   projectSettings: DEFAULT_PROJECT_SETTINGS,
   tileSpecification: EMPTY_TILE_SPECIFICATION,
+  lumberOrderSettings: DEFAULT_LUMBER_ORDER_SETTINGS,
   defineBaseOutline: (baseOutline, initialDefinitions) =>
     set({
       baseOutline,
@@ -94,6 +109,32 @@ export const useRoofProjectStore = create<RoofProjectState>()((set) => ({
     set((state) => ({ projectSettings: { ...state.projectSettings, ...changes } })),
   updateTileSpecification: (changes) =>
     set((state) => ({ tileSpecification: { ...state.tileSpecification, ...changes } })),
+  addRafterStockLength: (stockLengthInMeters) =>
+    set((state) => {
+      const { rafterStockLengthsInMeters } = state.lumberOrderSettings;
+
+      if (rafterStockLengthsInMeters.includes(stockLengthInMeters)) {
+        return state;
+      }
+
+      return {
+        lumberOrderSettings: {
+          ...state.lumberOrderSettings,
+          rafterStockLengthsInMeters: [...rafterStockLengthsInMeters, stockLengthInMeters].sort((first, second) => first - second),
+        },
+      };
+    }),
+  removeRafterStockLength: (stockLengthInMeters) =>
+    set((state) => ({
+      lumberOrderSettings: {
+        ...state.lumberOrderSettings,
+        rafterStockLengthsInMeters: state.lumberOrderSettings.rafterStockLengthsInMeters.filter(
+          (existingLength) => existingLength !== stockLengthInMeters,
+        ),
+      },
+    })),
+  updateSawKerf: (sawKerfInMillimeters) =>
+    set((state) => ({ lumberOrderSettings: { ...state.lumberOrderSettings, sawKerfInMillimeters } })),
 }));
 
 export const readResolvedRoofPlanes = (): RoofPlane[] => {
