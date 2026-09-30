@@ -1,0 +1,10 @@
+const COORDINATE_PRECISION_FACTOR = 1_000_000;
+
+export const COINCIDENT_POINT_TOLERANCE_IN_METERS = 0.001;
+
+export const BOUNDARY_TOLERANCE_IN_METERS = 0.0001;
+
+export const HEIGHT_TOLERANCE_IN_METERS = 0.02;
+
+export const removeFloatingNoise = (value: number): number =>
+  Math.round(value * COORDINATE_PRECISION_FACTOR) / COORDINATE_PRECISION_FACTOR;
